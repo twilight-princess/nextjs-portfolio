@@ -15,8 +15,9 @@ export const useChatbot = () => {
   }, [isOpen, conversationId]);
 
   const initializeConversation = async () => {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api';
     try {
-      const response = await fetch('http://localhost:3001/api/chat/conversations', {
+      const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: `session_${Date.now()}` })
@@ -52,6 +53,7 @@ export const useChatbot = () => {
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || !conversationId) return;
 
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api';
     const userMessage: Message = {
       id: Date.now(),
       text: text.trim(),
@@ -63,13 +65,13 @@ export const useChatbot = () => {
     setIsTyping(true);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/chat/conversations/${conversationId}/messages`, {
+      const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json' 
+        headers: {
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          message: text.trim() 
+        body: JSON.stringify({
+          message: text.trim()
         })
       });
       
