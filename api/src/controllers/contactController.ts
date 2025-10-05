@@ -14,8 +14,17 @@ export const createContact = async (req: Request, res: Response) => {
   try {
     const validatedData = contactSchema.parse(req.body);
 
+    // Get IP address from request (handles proxies like nginx)
+    const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+                      req.headers['x-real-ip'] as string ||
+                      req.socket.remoteAddress ||
+                      'unknown';
+
     const contact = await prisma.contact.create({
-      data: validatedData
+      data: {
+        ...validatedData,
+        ipAddress
+      }
     });
 
     // Here you could send an email notification
