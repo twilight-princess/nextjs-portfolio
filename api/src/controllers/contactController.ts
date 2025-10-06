@@ -27,8 +27,30 @@ export const createContact = async (req: Request, res: Response) => {
       }
     });
 
-    // Here you could send an email notification
-    // await sendContactNotification(contact);
+    // Send Discord notification
+    if (process.env.DISCORD_WEBHOOK_URL) {
+      try {
+        await fetch(process.env.DISCORD_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            embeds: [{
+              title: '📬 New Contact Form Submission',
+              color: 0x3b82f6,
+              fields: [
+                { name: 'Name', value: contact.name, inline: true },
+                { name: 'Email', value: contact.email, inline: true },
+                { name: 'IP Address', value: ipAddress, inline: true },
+                { name: 'Message', value: contact.message }
+              ],
+              timestamp: new Date().toISOString()
+            }]
+          })
+        });
+      } catch (error) {
+        console.error('Failed to send Discord notification:', error);
+      }
+    }
 
     res.status(201).json({
       message: "Thank you for your message! I'll get back to you soon.",
