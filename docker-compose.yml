@@ -27,6 +27,8 @@ services:
       context: ./api
       dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - ./api/.env
     environment:
       DATABASE_URL: postgresql://portfolio_user:portfolio123@db:5432/portfolio_db
       NODE_ENV: production
