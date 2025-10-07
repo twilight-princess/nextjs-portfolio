@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Project } from '@/lib/api';
 
 interface ProjectCardProps {
@@ -5,12 +6,14 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <div className="bg-slate-800/50 rounded-xl overflow-hidden border border-blue-800/30 hover:border-blue-600/50 transition-all hover:transform hover:scale-105 group">
       <div className="h-48 bg-gradient-to-br from-blue-500 via-indigo-500 to-cyan-500 flex items-center justify-center relative overflow-hidden">
         {project.imageUrl ? (
-          <img 
-            src={project.imageUrl} 
+          <img
+            src={project.imageUrl}
             alt={project.title}
             className="w-full h-full object-cover"
           />
@@ -25,9 +28,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-blue-300 transition-colors">
           {project.title}
         </h3>
-        <p className="text-slate-300 mb-4 line-clamp-3 leading-relaxed">
+        <p className={`text-slate-300 mb-2 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
           {project.description}
         </p>
+        {project.description.length > 150 && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-blue-400 hover:text-blue-300 text-sm mb-4 transition-colors"
+          >
+            {isExpanded ? 'Show less' : 'Read more'}
+          </button>
+        )}
         <div className="flex flex-wrap gap-2 mb-6">
           {project.techStack.map((tech, index) => (
             <span 
