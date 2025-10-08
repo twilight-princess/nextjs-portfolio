@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 const SYSTEM_PROMPT = `You are an AI assistant on Elizabeth Evans' portfolio website. Your role is to help visitors learn about Elizabeth's professional background and skills.
 
