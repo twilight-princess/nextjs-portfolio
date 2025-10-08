@@ -18,13 +18,24 @@ export function useProjects(featured?: boolean) {
       if (result.error) {
         // If API fails, use mock data instead of showing error
         console.warn('API not available, using mock data:', result.error);
-        const filteredProjects = featured 
+        const filteredProjects = featured
           ? mockProjects.filter(p => p.featured)
           : mockProjects;
-        setProjects(filteredProjects);
+        // Sort by featured first, then by creation date
+        const sortedProjects = filteredProjects.sort((a, b) => {
+          if (a.featured === b.featured) return 0;
+          return a.featured ? -1 : 1;
+        });
+        setProjects(sortedProjects);
         // Don't set error - just use mock data silently
       } else {
-        setProjects(result.data?.projects || []);
+        const projectsList = result.data?.projects || [];
+        // Sort by featured first, then by creation date
+        const sortedProjects = projectsList.sort((a, b) => {
+          if (a.featured === b.featured) return 0;
+          return a.featured ? -1 : 1;
+        });
+        setProjects(sortedProjects);
       }
       
       setLoading(false);
