@@ -1,9 +1,27 @@
 // src/routes/chat.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+const SYSTEM_PROMPT = `You are an AI assistant on Elizabeth Evans' portfolio website. Your role is to help visitors learn about Elizabeth's professional background and skills.
+
+Key information about Elizabeth:
+- Software engineer with full-stack development experience
+- Works at Bloomerang on donor management software
+- Tech stack: React, Next.js, TypeScript, Node.js, C#, .NET, MySQL, PostgreSQL, AWS, Docker, Terraform
+- Background: Transitioned from chemistry and math to computer science
+- 20+ years of self-taught coding experience
+- Portfolio site: https://lizz.codes
+- Email: 3lizabeth3vans@gmail.com
+
+Keep responses concise, friendly, and professional. If asked about topics outside Elizabeth's professional profile, politely redirect the conversation.`;
 
 // TypeScript interfaces
 interface CreateConversationRequest {
@@ -18,22 +36,33 @@ interface ConversationParams {
   id: string;
 }
 
-// Simple response function
-function getSimpleResponse(message: string): string {
-  const msg = message.toLowerCase();
-  
-  if (msg.includes('experience') || msg.includes('background')) {
-    return "Elizabeth has experience in full-stack development, working with React, Node.js, C#, and cloud technologies like AWS. She transitioned from chemistry/math to computer science and has been coding for many years!";
-  } else if (msg.includes('skills') || msg.includes('technologies')) {
-    return "Her technical skills include React & Next.js, JavaScript/TypeScript, Node.js, C# & .NET, SQL & NoSQL databases, AWS, Terraform, and more. Check out her About page for the full list!";
-  } else if (msg.includes('projects')) {
-    return "Elizabeth has worked on various full-stack and frontend applications, API integrations, and DevOps projects. You can see her project portfolio and GitHub history for examples of her work.";
-  } else if (msg.includes('contact') || msg.includes('reach')) {
-    return "You can reach Elizabeth at 3lizabeth3vans@gmail.com or connect with her on LinkedIn. She's always open to discussing new opportunities!";
-  } else if (msg.includes('resume')) {
-    return "Elizabeth has specialized resumes for different roles - frontend, fullstack, and backend. You can view and download them from the Resume page.";
-  } else {
-    return "That's a great question! For more detailed information, I'd recommend checking out Elizabeth's About page, Resume, or reaching out to her directly. Is there anything specific about her technical skills or experience you'd like to know?";
+// AI response function
+async function getAIResponse(message: string, conversationHistory: string[] = []): Promise<string> {
+  try {
+    // Build context with conversation history
+    const context = conversationHistory.length > 0
+      ? `Previous messages:\n${conversationHistory.join('\n')}\n\nUser: ${message}`
+      : `User: ${message}`;
+
+    const chat = model.startChat({
+      history: [
+        {
+          role: 'user',
+          parts: [{ text: SYSTEM_PROMPT }]
+        },
+        {
+          role: 'model',
+          parts: [{ text: "Understood! I'm here to help visitors learn about Elizabeth's background and skills. How can I help?" }]
+        }
+      ]
+    });
+
+    const result = await chat.sendMessage(context);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Gemini AI error:', error);
+    return "I apologize, but I'm having trouble processing your question right now. Please try asking about Elizabeth's experience, skills, or projects, or reach out directly at 3lizabeth3vans@gmail.com.";
   }
 }
 
@@ -76,10 +105,21 @@ router.post('/conversations/:id/messages', async (req: Request<ConversationParam
         isBot: false
       }
     });
-    
-    // Get bot response
-    const botResponse = getSimpleResponse(message);
-    
+
+    // Get conversation history for context
+    const previousMessages = await prisma.chatMessage.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'asc' },
+      take: 10 // Last 10 messages for context
+    });
+
+    const history = previousMessages.map(msg =>
+      `${msg.isBot ? 'Assistant' : 'User'}: ${msg.message}`
+    );
+
+    // Get AI response
+    const botResponse = await getAIResponse(message, history);
+
     // Store bot response
     await prisma.chatMessage.create({
       data: {
@@ -88,7 +128,7 @@ router.post('/conversations/:id/messages', async (req: Request<ConversationParam
         isBot: true
       }
     });
-    
+
     res.json({ message: botResponse });
     
   } catch (error) {
