@@ -1,14 +1,13 @@
 // src/routes/chat.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const SYSTEM_PROMPT = `You are an AI assistant on Elizabeth Evans' portfolio website. Your role is to help visitors learn about Elizabeth's professional background and skills.
 
@@ -39,27 +38,15 @@ interface ConversationParams {
 // AI response function
 async function getAIResponse(message: string, conversationHistory: string[] = []): Promise<string> {
   try {
-    // Build context with conversation history
-    const context = conversationHistory.length > 0
-      ? `Previous messages:\n${conversationHistory.join('\n')}\n\nUser: ${message}`
-      : `User: ${message}`;
+    // Build full prompt with context
+    const fullPrompt = `${SYSTEM_PROMPT}\n\n${conversationHistory.length > 0 ? 'Previous conversation:\n' + conversationHistory.join('\n') + '\n\n' : ''}User: ${message}\n\nAssistant:`;
 
-    const chat = model.startChat({
-      history: [
-        {
-          role: 'user',
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
-        {
-          role: 'model',
-          parts: [{ text: "Understood! I'm here to help visitors learn about Elizabeth's background and skills. How can I help?" }]
-        }
-      ]
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: fullPrompt
     });
 
-    const result = await chat.sendMessage(context);
-    const response = await result.response;
-    return response.text();
+    return response.text || "I'm here to help! Feel free to ask about Elizabeth's experience, skills, or projects.";
   } catch (error) {
     console.error('Gemini AI error:', error);
     return "I apologize, but I'm having trouble processing your question right now. Please try asking about Elizabeth's experience, skills, or projects, or reach out directly at 3lizabeth3vans@gmail.com.";
