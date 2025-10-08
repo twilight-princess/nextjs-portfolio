@@ -7,10 +7,13 @@ const prisma = new PrismaClient();
 export const getProjects = async (req: Request, res: Response) => {
   try {
     const { featured } = req.query;
-    
+
     const projects = await prisma.project.findMany({
       where: featured === 'true' ? { featured: true } : undefined,
-      orderBy: { createdAt: 'desc' }
+      orderBy: [
+        { featured: 'desc' },
+        { createdAt: 'desc' }
+      ]
     });
 
     const formattedProjects = projects.map(project => ({
