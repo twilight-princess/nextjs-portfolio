@@ -1,7 +1,7 @@
 // src/routes/chat.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/genai';
 
 const router = express.Router();
 const prisma = new PrismaClient();
