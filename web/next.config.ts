@@ -1,19 +1,21 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable standalone output for Docker deployment
-  output: 'standalone',
-  
+  // Remove standalone output for Amplify deployment
+  // output: 'standalone', // Only needed for Docker
+
   // Enable compression
   compress: true,
 
-  // Configure for reverse proxy (Nginx)
+  // Configure for reverse proxy (Nginx) - adjust for your API endpoint
   async rewrites() {
     return [
-      // Handle API routes through nginx proxy
+      // Handle API routes through nginx proxy or external API
       {
         source: '/api/:path*',
-        destination: '/api/:path*',
+        destination: process.env.NEXT_PUBLIC_API_URL
+          ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
+          : '/api/:path*',
       },
     ];
   },
