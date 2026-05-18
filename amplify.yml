@@ -8,6 +8,17 @@ frontend:
     build:
       commands:
         - npm run build
+        - echo "=== BUILD COMPLETED ==="
+        - echo "=== Current directory:"
+        - pwd
+        - echo "=== Listing web directory:"
+        - ls -la
+        - echo "=== Checking for .next directory:"
+        - ls -la .next || echo "No .next directory found"
+        - echo "=== Checking for out directory:"
+        - ls -la out || echo "No out directory found"
+        - echo "=== Contents of out directory (if exists):"
+        - ls -la out/ || echo "Cannot list out directory"
   artifacts:
     baseDirectory: web/out
     files:
