@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Remove standalone output for Amplify deployment
-  // output: 'standalone', // Only needed for Docker
+  // Static export for Amplify deployment
+  output: 'export',
+
+  // Disable image optimization for static export
+  images: {
+    unoptimized: true,
+  },
 
   // Enable compression
   compress: true,
