@@ -12,41 +12,8 @@ const nextConfig: NextConfig = {
   // Enable compression
   compress: true,
 
-  // Configure for reverse proxy (Nginx) - adjust for your API endpoint
-  async rewrites() {
-    return [
-      // Handle API routes through nginx proxy or external API
-      {
-        source: '/api/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL
-          ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
-          : '/api/:path*',
-      },
-    ];
-  },
-
-  // Security headers
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-        ],
-      },
-    ];
-  },
+  // Note: rewrites and headers don't work with static export
+  // If you need API calls, use absolute URLs or configure CORS on your API server
 };
 
 export default nextConfig;
